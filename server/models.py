@@ -12,7 +12,7 @@ metadata = MetaData(
 
 db = SQLAlchemy(metadata=metadata)
 
-
+# Models
 class Restaurant(db.Model, SerializerMixin):
     __tablename__ = "restaurants"
 
