@@ -73,35 +73,33 @@ def get_pizzas():
 @app.route("/restaurant_pizzas", methods=["POST"])
 def create_restaurant_pizza():
     data = request.get_json()
-    price = data.get("price")
-    restaurant_id = data.get("restaurant_id")
     pizza_id = data.get("pizza_id")
+    restaurant_id = data.get("restaurant_id")
+    price = data.get("price")
 
-    # Validate price
+    # Validation: Check if the price is between 1 and 30
     if not (1 <= price <= 30):
-        return jsonify({"errors": ["Price must be between 1 and 30"]}), 400
+        return jsonify({"errors": ["validation errors"]}), 400
+    
+    pizza = Pizza.query.get(pizza_id)
+    restaurant = Restaurant.query.get(restaurant_id)
 
-    # Check if restaurant and pizza exist
-    if not Restaurant.query.get(restaurant_id):
-        return jsonify({"errors": ["Restaurant not found"]}), 404
-    if not Pizza.query.get(pizza_id):
+    if not pizza:
         return jsonify({"errors": ["Pizza not found"]}), 404
+    if not restaurant:
+        return jsonify({"errors": ["Restaurant not found"]}), 404
 
-    # Create and save restaurant-pizza relationship
+    # Create a new RestaurantPizza 
     restaurant_pizza = RestaurantPizza(
-        price=price,
+        pizza_id=pizza_id,
         restaurant_id=restaurant_id,
-        pizza_id=pizza_id
+        price=price
     )
+
     db.session.add(restaurant_pizza)
     db.session.commit()
 
-    return jsonify({
-        "id": restaurant_pizza.id,
-        "price": restaurant_pizza.price,
-        "restaurant_id": restaurant_pizza.restaurant_id,
-        "pizza_id": restaurant_pizza.pizza_id,
-    }), 201
+    return jsonify(restaurant_pizza.to_dict()), 201
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
