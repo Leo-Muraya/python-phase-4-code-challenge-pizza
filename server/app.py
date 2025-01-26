@@ -36,14 +36,16 @@ def get_restaurant_by_id(id):
         return jsonify({"error": "Restaurant not found"}), 404
 
     restaurant_pizzas = RestaurantPizza.query.filter_by(restaurant_id=id).all()
-    pizzas = [
-        {
-            "id": rp.pizza_id,
-            "name": Pizza.query.get(rp.pizza_id).name,
-            "ingredients": Pizza.query.get(rp.pizza_id).ingredients,
-        }
-        for rp in restaurant_pizzas
-    ]
+    pizzas = []
+    for rp in restaurant_pizzas:
+        pizza = Pizza.query.get(rp.pizza_id)
+        if pizza:  
+            pizzas.append({
+                "id": pizza.id,
+                "name": pizza.name,
+                "ingredients": pizza.ingredients,
+            })
+
     return jsonify({
         "id": restaurant.id,
         "name": restaurant.name,
@@ -51,16 +53,20 @@ def get_restaurant_by_id(id):
         "pizzas": pizzas
     })
 
+
 @app.route("/restaurants/<int:id>", methods=["DELETE"])
 def delete_restaurant(id):
     restaurant = Restaurant.query.get(id)
     if not restaurant:
         return jsonify({"error": "Restaurant not found"}), 404
 
+    # Delete all restaurant_pizzas manually if cascade is not working
     RestaurantPizza.query.filter_by(restaurant_id=id).delete()
+
     db.session.delete(restaurant)
     db.session.commit()
     return '', 204
+
 
 @app.route("/pizzas", methods=["GET"])
 def get_pizzas():
